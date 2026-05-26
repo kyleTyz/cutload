@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CutLoad — Download Video Gratis</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --card: #111111;
+    --border: #222;
+    --accent: #f5e642;
+    --accent2: #ff6b2b;
+    --text: #f0f0f0;
+    --muted: #666;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(245,230,66,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,230,66,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  /* Glow blob */
+  body::after {
+    content: '';
+    position: fixed;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(245,230,66,0.08) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 520px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Logo */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -1px;
+  }
+
+  .logo-text span {
+    color: var(--accent);
+  }
+
+  .tagline {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-left: 2px;
+  }
+
+  /* Main card */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .card-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  /* Platform pills */
+  .platforms {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .pill.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(245,230,66,0.05);
+  }
+
+  /* Input */
+  .input-wrap {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  .input-wrap input {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-wrap input:focus {
+    border-color: var(--accent);
+  }
+
+  .input-wrap input::placeholder {
+    color: #333;
+  }
+
+  /* Button */
+  .btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: #0a0a0a;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn:hover {
+    background: #ffe800;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(245,230,66,0.2);
+  }
+
+  .btn:active { transform: translateY(0); }
+
+  /* Error */
+  .error {
+    color: #ff4444;
+    font-size: 12px;
+    margin-top: 8px;
+    display: none;
+  }
+
+  /* ===== AD OVERLAY ===== */
+  .ad-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .ad-overlay.show { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .ad-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    position: relative;
+  }
+
+  .ad-badge {
+    display: inline-block;
+    background: rgba(255,107,43,0.15);
+    border: 1px solid rgba(255,107,43,0.3);
+    color: var(--accent2);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+
+  .ad-message {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+
+  .ad-message span {
+    color: var(--accent);
+  }
+
+  .ad-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  /* Ad placeholder box */
+  .ad-box {
+    background: #0a0a0a;
+    border: 1px dashed #222;
+    border-radius: 12px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  /* Countdown ring */
+  .countdown-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .ring-svg {
+    transform: rotate(-90deg);
+  }
+
+  .ring-bg {
+    fill: none;
+    stroke: #1a1a1a;
+    stroke-width: 4;
+  }
+
+  .ring-fill {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 113;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear;
+  }
+
+  .countdown-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    position: absolute;
+    line-height: 1;
+  }
+
+  .ring-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+  }
+
+  .countdown-label {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* Skip button */
+  .skip-btn {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: not-allowed;
+    transition: all 0.3s;
+  }
+
+  .skip-btn.ready {
+    border-color: var(--accent);
+    color: var(--accent);
+    cursor: pointer;
+    background: rgba(245,230,66,0.05);
+  }
+
+  .skip-btn.ready:hover {
+    background: var(--accent);
+    color: #0a0a0a;
+    font-weight: 700;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: #333;
+    margin-top: 24px;
+    line-height: 1.8;
+  }
+
+  .footer a {
+    color: #444;
+    text-decoration: none;
+  }
+
+  /* How to use */
+  .steps {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .step {
+    flex: 1;
+    background: #0d0d0d;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 12px;
+    text-align: center;
+  }
+
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .step-text {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Logo -->
+  <div class="logo">
+    <div class="logo-icon">✂️</div>
+    <div>
+      <div class="logo-text">Cut<span>Load</span></div>
+      <div class="tagline">Download Video Gratis</div>
+    </div>
+  </div>
+
+  <!-- Main Card -->
+  <div class="card">
+    <div class="card-title">Paste URL, langsung download.</div>
+    <div class="card-sub">Support YouTube, TikTok, Instagram, Facebook & lebih.</div>
+
+    <div class="platforms">
+      <div class="pill active">YouTube</div>
+      <div class="pill active">TikTok</div>
+      <div class="pill active">Instagram</div>
+      <div class="pill active">Facebook</div>
+      <div class="pill">& lainnya</div>
+    </div>
+
+    <div class="input-wrap">
+      <input type="text" id="urlInput" placeholder="https://www.youtube.com/watch?v=..." />
+    </div>
+    <div class="error" id="errorMsg">⚠️ URL tidak valid. Pastikan link dari YouTube, TikTok, atau Instagram.</div>
+
+    <button class="btn" onclick="startProcess()">⚡ PROSES DOWNLOAD</button>
+  </div>
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">Paste URL video</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">Tunggu 5 detik</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">Download gratis!</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    © 2025 CutLoad · Gratis untuk semua clipper Indonesia 🇮🇩<br>
+    <a href="#">Tentang Kami</a> · <a href="#">Kebijakan Privasi</a>
+  </div>
+
+</div>
+
+<!-- AD OVERLAY -->
+<div class="ad-overlay" id="adOverlay">
+  <div class="ad-card">
+
+    <div class="ad-badge">⚡ Sebentar lagi...</div>
+
+    <div class="ad-message">
+      Iklan ini yang membuat<br><span>CutLoad tetap gratis</span> 🙏
+    </div>
+    <div class="ad-sub">
+      Terima kasih sudah mendukung kami.<br>
+      Download kamu akan dimulai dalam:
+    </div>
+
+    <!-- Ad placeholder (ganti dengan kode Adsterra) -->
+    <div class="ad-box">[ Slot Iklan — Adsterra ]</div>
+
+    <!-- Countdown ring -->
+    <div class="countdown-wrap">
+      <div class="ring-wrap">
+        <svg class="ring-svg" width="60" height="60" viewBox="0 0 40 40">
+          <circle class="ring-bg" cx="20" cy="20" r="18"/>
+          <circle class="ring-fill" id="ringFill" cx="20" cy="20" r="18"/>
+        </svg>
+        <div class="countdown-num" id="countNum">5</div>
+      </div>
+      <div class="countdown-label">detik sebelum<br>diarahkan ke<br>halaman download</div>
+    </div>
+
+    <button class="skip-btn" id="skipBtn" disabled onclick="doRedirect()">
+      Menunggu... (<span id="skipCount">5</span>)
+    </button>
+
+  </div>
+</div>
+
+<script>
+  const SUPPORTED = ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'facebook.com', 'fb.watch', 'twitter.com', 'x.com'];
+  const SAVEFROM = 'https://savefrom.net/#url=';
+
+  let targetUrl = '';
+  let timer = null;
+
+  function isValidUrl(url) {
+    try {
+      const u = new URL(url);
+      return SUPPORTED.some(d => u.hostname.includes(d));
+    } catch { return false; }
+  }
+
+  function startProcess() {
+    const input = document.getElementById('urlInput').value.trim();
+    const err = document.getElementById('errorMsg');
+
+    if (!isValidUrl(input)) {
+      err.style.display = 'block';
+      return;
+    }
+
+    err.style.display = 'none';
+    targetUrl = input;
+    showAd();
+  }
+
+  function showAd() {
+    document.getElementById('adOverlay').classList.add('show');
+    startCountdown();
+  }
+
+  function startCountdown() {
+    let count = 5;
+    const numEl = document.getElementById('countNum');
+    const skipEl = document.getElementById('skipBtn');
+    const skipCount = document.getElementById('skipCount');
+    const ring = document.getElementById('ringFill');
+    const circumference = 2 * Math.PI * 18; // ~113
+
+    ring.style.strokeDashoffset = 0;
+
+    timer = setInterval(() => {
+      count--;
+      numEl.textContent = count;
+      skipCount.textContent = count;
+
+      // Ring progress
+      const offset = circumference * (1 - count / 5);
+      ring.style.strokeDashoffset = offset;
+
+      if (count <= 0) {
+        clearInterval(timer);
+        skipEl.disabled = false;
+        skipEl.classList.add('ready');
+        skipEl.textContent = '🚀 Lanjut ke Download →';
+        doRedirect();
+      }
+    }, 1000);
+  }
+
+  function doRedirect() {
+    if (timer) clearInterval(timer);
+    window.open(SAVEFROM + encodeURIComponent(targetUrl), '_blank');
+    
+    // Reset
+    setTimeout(() => {
+      document.getElementById('adOverlay').classList.remove('show');
+      document.getElementById('urlInput').value = '';
+      document.getElementById('countNum').textContent = '5';
+      document.getElementById('skipCount').textContent = '5';
+      document.getElementById('skipBtn').disabled = true;
+      document.getElementById('skipBtn').classList.remove('ready');
+      document.getElementById('skipBtn').textContent = 'Menunggu... (5)';
+      document.getElementById('ringFill').style.strokeDashoffset = 0;
+    }, 500);
+  }
+
+  // Enter key support
+  document.getElementById('urlInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') startProcess();
+  });
+</script>
+
+</body>
+</html>
