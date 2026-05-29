@@ -762,7 +762,21 @@
   });
 </script>
 
-</body>
+<script>
+var testAd = document.createElement('div');
+testAd.innerHTML = '&nbsp;';
+testAd.className = 'adsbox';
+document.body.appendChild(testAd);
+setTimeout(function() {
+  if (testAd.offsetHeight === 0) {
+    var notice = document.createElement('div');
+    notice.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:#f5e642;color:#000;padding:10px 20px;border-radius:10px;font-size:13px;z-index:9999;text-align:center;';
+    notice.innerHTML = '⚠️ Nonaktifkan AdBlocker untuk mendukung kami 🙏';
+    document.body.appendChild(notice);
+  }
+  document.body.removeChild(testAd);
+}, 100);
+</script></body>
 </html>
 <script>
 var testAd = document.createElement("div");
