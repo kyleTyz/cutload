@@ -199,32 +199,7 @@
 
   .btn:active { transform: translateY(0); }
 
-  /* AdBlock Overlay */
-  #adblock-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.95);
-    z-index: 99999;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  #adblock-overlay.show { display: flex; }
-  .adblock-card {
-    background: #111;
-    border: 1px solid #f5e642;
-    border-radius: 20px;
-    padding: 32px;
-    max-width: 400px;
-    width: 100%;
-    text-align: center;
-  }
-  .adblock-title { font-size: 20px; font-weight: 700; color: #f5e642; margin-bottom: 12px; }
-  .adblock-sub { font-size: 13px; color: #aaa; line-height: 1.6; margin-bottom: 24px; }
-  .adblock-steps { text-align: left; background: #0a0a0a; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
-  .adblock-steps p { font-size: 12px; color: #ccc; margin-bottom: 8px; }
-  .adblock-btn { width: 100%; padding: 14px; background: #f5e642; color: #000; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
 
 
   /* Error */
@@ -496,20 +471,10 @@
 
 </div>
 
-<!-- ADBLOCK OVERLAY -->
-<div id="adblock-overlay">
-  <div class="adblock-card">
-    <div class="adblock-title">⚠️ AdBlocker Terdeteksi!</div>
-    <div class="adblock-sub">CutLoad gratis berkat iklan.<br>Nonaktifkan AdBlocker dulu ya 🙏</div>
-    <div class="adblock-steps">
-      <p>📱 <strong style="color:#f5e642">Cara nonaktifkan AdGuard DNS:</strong></p>
-      <p>1. Buka Settings HP</p>
-      <p>2. Connections → More connection settings</p>
-      <p>3. Private DNS → pilih "Off"</p>
-      <p>4. Refresh halaman ini</p>
-    </div>
-    <button class="adblock-btn" onclick="location.reload()">✅ Sudah Nonaktifkan → Refresh</button>
-  </div>
+<!-- ADBLOCK BANNER -->
+<div id="adblock-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#111;border-top:1px solid #f5e642;padding:10px 16px;text-align:center;font-family:'DM Sans',sans-serif;">
+  <span style="color:#f5e642;font-size:13px;">🙏 CutLoad gratis berkat iklan. Nonaktifkan AdBlocker ya</span>
+  <button onclick="this.parentElement.style.display='none'" style="margin-left:10px;background:#f5e642;color:#000;border:none;border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;">Tutup</button>
 </div>
 
 
@@ -635,48 +600,20 @@
 </script>
 
 <script>
-// === AdBlock Detection ===
-// Multi-bait + reference element for accurate detection
-var baits = [];
-var baitConfigs = [
-  { className: 'adsbox' },
-  { className: 'ad-container' },
-  { className: 'adsbygoogle' },
-  { id_: 'adsense-bait' }
-];
-
-baitConfigs.forEach(function(cfg) {
-  var el = document.createElement('div');
-  el.innerHTML = '&nbsp;';
-  if (cfg.className) el.className = cfg.className;
-  if (cfg.id_) el.id = cfg.id_;
-  el.style.cssText = 'height:1px;width:1px;position:absolute;top:-100px;left:0';
-  document.body.appendChild(el);
-  baits.push(el);
-});
-
-// Control element (not ad-like, won't be blocked)
-var control = document.createElement('div');
-control.style.cssText = 'height:1px;width:1px;position:absolute;top:-100px;left:0';
-document.body.appendChild(control);
-
+// === AdBlock Notification (non-blocking) ===
+// Gentle banner instead of blocking overlay - no false positives
 setTimeout(function() {
-  var controlOk = control.offsetHeight === 1;
-  var anyBaitBlocked = false;
-
-  baits.forEach(function(el) {
-    if (el.offsetHeight === 0 || el.offsetParent === null) {
-      anyBaitBlocked = true;
+  var bait = document.createElement('div');
+  bait.className = 'adsbox';
+  bait.style.cssText = 'height:1px;width:1px;position:absolute;top:-100px;left:0';
+  document.body.appendChild(bait);
+  setTimeout(function() {
+    if (bait.offsetHeight === 0) {
+      document.getElementById('adblock-banner').style.display = 'block';
     }
-    if (el.parentNode) document.body.removeChild(el);
-  });
-  document.body.removeChild(control);
-
-  // Only show overlay if baits are blocked but control is normal (avoid false positives)
-  if (anyBaitBlocked && controlOk) {
-    document.getElementById("adblock-overlay").classList.add("show");
-  }
-}, 300);
+    document.body.removeChild(bait);
+  }, 200);
+}, 500);
 </script>
 </body>
 </html>
