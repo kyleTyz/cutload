@@ -636,18 +636,47 @@
 
 <script>
 // === AdBlock Detection ===
-var testAd = document.createElement("div");
-testAd.innerHTML = "&nbsp;";
-testAd.className = "adsbox";
-testAd.style.cssText = "height:1px;width:1px;position:absolute;top:-100px";
-document.body.appendChild(testAd);
+// Multi-bait + reference element for accurate detection
+var baits = [];
+var baitConfigs = [
+  { className: 'adsbox' },
+  { className: 'ad-container' },
+  { className: 'adsbygoogle' },
+  { id_: 'adsense-bait' }
+];
+
+baitConfigs.forEach(function(cfg) {
+  var el = document.createElement('div');
+  el.innerHTML = '&nbsp;';
+  if (cfg.className) el.className = cfg.className;
+  if (cfg.id_) el.id = cfg.id_;
+  el.style.cssText = 'height:1px;width:1px;position:absolute;top:-100px;left:0';
+  document.body.appendChild(el);
+  baits.push(el);
+});
+
+// Control element (not ad-like, won't be blocked)
+var control = document.createElement('div');
+control.style.cssText = 'height:1px;width:1px;position:absolute;top:-100px;left:0';
+document.body.appendChild(control);
+
 setTimeout(function() {
-  if (testAd.offsetHeight === 0) {
+  var controlOk = control.offsetHeight === 1;
+  var anyBaitBlocked = false;
+
+  baits.forEach(function(el) {
+    if (el.offsetHeight === 0 || el.offsetParent === null) {
+      anyBaitBlocked = true;
+    }
+    if (el.parentNode) document.body.removeChild(el);
+  });
+  document.body.removeChild(control);
+
+  // Only show overlay if baits are blocked but control is normal (avoid false positives)
+  if (anyBaitBlocked && controlOk) {
     document.getElementById("adblock-overlay").classList.add("show");
   }
-  document.body.removeChild(testAd);
-}, 200);
+}, 300);
 </script>
-
 </body>
 </html>
