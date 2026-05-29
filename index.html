@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CutLoad — Cut & Download Video Gratis</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --card: #111111;
+    --border: #222;
+    --accent: #f5e642;
+    --accent2: #ff6b2b;
+    --text: #f0f0f0;
+    --muted: #666;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(245,230,66,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,230,66,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(245,230,66,0.06) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 520px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -1px;
+  }
+
+  .logo-text span { color: var(--accent); }
+
+  .tagline {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .card-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .platforms {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .pill.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(245,230,66,0.05);
+  }
+
+  .input-wrap {
+    position: relative;
+    margin-bottom: 12px;
+  }
+
+  .input-wrap input {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-wrap input:focus { border-color: var(--accent); }
+  .input-wrap input::placeholder { color: #333; }
+
+  .input-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .timestamp-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .timestamp-hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .mode-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .mode-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .mode-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(245,230,66,0.05);
+  }
+
+  .timestamp-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .timestamp-section.show { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: #0a0a0a;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn:hover {
+    background: #ffe800;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(245,230,66,0.2);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .error {
+    color: #ff4444;
+    font-size: 12px;
+    margin-top: 8px;
+    display: none;
+  }
+
+  .steps {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .step {
+    flex: 1;
+    background: #0d0d0d;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 12px;
+    text-align: center;
+  }
+
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .step-text {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: #333;
+    margin-top: 24px;
+    line-height: 1.8;
+  }
+
+  .footer a { color: #444; text-decoration: none; }
+
+  /* AD OVERLAY */
+  .ad-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.97);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .ad-overlay.show { display: flex; }
+
+  .ad-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .ad-badge {
+    display: inline-block;
+    background: rgba(255,107,43,0.15);
+    border: 1px solid rgba(255,107,43,0.3);
+    color: var(--accent2);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+
+  .ad-message {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+
+  .ad-message span { color: var(--accent); }
+
+  .ad-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .ad-box {
+    background: #0a0a0a;
+    border: 1px dashed #222;
+    border-radius: 12px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .countdown-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .ring-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+  }
+
+  .ring-svg { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: #1a1a1a; stroke-width: 4; }
+  .ring-fill {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 113;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear;
+  }
+
+  .countdown-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    position: absolute;
+  }
+
+  .countdown-label {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .skip-btn {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: not-allowed;
+    transition: all 0.3s;
+  }
+
+  .skip-btn.ready {
+    border-color: var(--accent);
+    color: var(--accent);
+    cursor: pointer;
+    background: rgba(245,230,66,0.05);
+  }
+
+  .skip-btn.ready:hover {
+    background: var(--accent);
+    color: #0a0a0a;
+    font-weight: 700;
+  }
+
+  /* PROGRESS OVERLAY */
+  .progress-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.97);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .progress-overlay.show { display: flex; }
+
+  .progress-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px 32px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid #222;
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 24px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .progress-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .progress-sub {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* AdBlock Overlay */
+  #adblock-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  #adblock-overlay.show { display: flex; }
+  .adblock-card {
+    background: #111;
+    border: 1px solid #f5e642;
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+  .adblock-title { font-size: 20px; font-weight: 700; color: #f5e642; margin-bottom: 12px; }
+  .adblock-sub { font-size: 13px; color: #aaa; line-height: 1.6; margin-bottom: 24px; }
+  .adblock-steps { text-align: left; background: #0a0a0a; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+  .adblock-steps p { font-size: 12px; color: #ccc; margin-bottom: 8px; }
+  .adblock-btn { width: 100%; padding: 14px; background: #f5e642; color: #000; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+</style>
+<script src="https://pl29557001.effectivecpmnetwork.com/0a/7a/a2/0a7aa2fb6eb530e2c9db500a3d8c8eee.js"></script>
+<script src="https://pl29557002.effectivecpmnetwork.com/2d/b8/2f/2db82f9cb0575430111a306ad8c89800.js"></script>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="logo">
+    <div class="logo-icon">✂️</div>
+    <div>
+      <div class="logo-text">Cut<span>Load</span></div>
+      <div class="tagline">Cut & Download Video Gratis</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Cut & download video.</div>
+    <div class="card-sub">Support YouTube, TikTok, Instagram, Facebook & lebih.</div>
+
+    <div class="platforms">
+      <div class="pill active">YouTube</div>
+      <div class="pill active">TikTok</div>
+      <div class="pill active">Instagram</div>
+      <div class="pill active">Facebook</div>
+      <div class="pill">& lainnya</div>
+    </div>
+
+    <!-- Mode toggle -->
+    <div class="mode-toggle">
+      <button class="mode-btn active" onclick="setMode('full')" id="btn-full">⬇️ Download Full</button>
+      <button class="mode-btn" onclick="setMode('cut')" id="btn-cut">✂️ Cut & Download</button>
+    </div>
+
+    <div class="input-wrap">
+      <input type="text" id="urlInput" placeholder="https://www.youtube.com/watch?v=..." />
+    </div>
+
+    <!-- Timestamp section -->
+    <div class="timestamp-section" id="timestampSection">
+      <div class="timestamp-row">
+        <div>
+          <label class="input-label">Start Time</label>
+          <div class="input-wrap">
+            <input type="text" id="startTime" placeholder="0:30" />
+          </div>
+        </div>
+        <div>
+          <label class="input-label">End Time</label>
+          <div class="input-wrap">
+            <input type="text" id="endTime" placeholder="1:45" />
+          </div>
+        </div>
+      </div>
+      <div class="timestamp-hint">Format: menit:detik (contoh: 1:30 = 1 menit 30 detik)</div>
+    </div>
+
+    <div class="error" id="errorMsg">⚠️ URL tidak valid. Pastikan link dari YouTube, TikTok, atau Instagram.</div>
+
+    <button class="btn" onclick="startProcess()" id="mainBtn">⚡ PROSES DOWNLOAD</button>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">Paste URL video</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">Tunggu iklan 5 detik</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">Download gratis!</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    © 2025 CutLoad · Gratis untuk semua clipper Indonesia 🇮🇩<br>
+    <a href="#">Tentang Kami</a> · <a href="#">Kebijakan Privasi</a>
+  </div>
+
+</div>
+
+<!-- AD OVERLAY -->
+<div class="ad-overlay" id="adOverlay">
+  <div class="ad-card">
+    <div class="ad-badge">⚡ Sebentar lagi...</div>
+    <div class="ad-message">
+      Iklan ini yang membuat<br><span>CutLoad tetap gratis</span> 🙏
+    </div>
+    <div class="ad-sub">
+      Terima kasih sudah mendukung kami.<br>
+      Download kamu akan dimulai dalam:
+    </div>
+
+    <!-- Slot iklan Adsterra -->
+    <div class="ad-box">[ Slot Iklan — Adsterra ]</div>
+
+    <div class="countdown-wrap">
+      <div class="ring-wrap">
+        <svg class="ring-svg" width="60" height="60" viewBox="0 0 40 40">
+          <circle class="ring-bg" cx="20" cy="20" r="18"/>
+          <circle class="ring-fill" id="ringFill" cx="20" cy="20" r="18"/>
+        </svg>
+        <div class="countdown-num" id="countNum">5</div>
+      </div>
+      <div class="countdown-label">detik sebelum<br>download dimulai</div>
+    </div>
+
+    <button class="skip-btn" id="skipBtn" disabled onclick="proceedDownload()">
+      Menunggu... (<span id="skipCount">5</span>)
+    </button>
+  </div>
+</div>
+
+<!-- PROGRESS OVERLAY -->
+<div class="progress-overlay" id="progressOverlay">
+  <div class="progress-card">
+    <div class="spinner"></div>
+    <div class="progress-title" id="progressTitle">Memproses video...</div>
+    <div class="progress-sub" id="progressSub">Mohon tunggu, jangan tutup halaman ini</div>
+  </div>
+</div>
+
+<script>
+  const BACKEND = "https://railroad-possibly-amusement.ngrok-free.dev";
+  const SUPPORTED = ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'facebook.com', 'fb.watch', 'twitter.com', 'x.com'];
+
+  let currentMode = 'full';
+  let targetUrl = '';
+  let timer = null;
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('btn-full').classList.toggle('active', mode === 'full');
+    document.getElementById('btn-cut').classList.toggle('active', mode === 'cut');
+    document.getElementById('timestampSection').classList.toggle('show', mode === 'cut');
+    document.getElementById('mainBtn').textContent = mode === 'cut' ? '✂️ CUT & DOWNLOAD' : '⚡ PROSES DOWNLOAD';
+  }
+
+  function isValidUrl(url) {
+    try {
+      const u = new URL(url);
+      return SUPPORTED.some(d => u.hostname.includes(d));
+    } catch { return false; }
+  }
+
+  function timeToSeconds(t) {
+    const parts = t.split(':').map(Number);
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    return parseInt(t) || 0;
+  }
+
+  function startProcess() {
+    const url = document.getElementById('urlInput').value.trim();
+    const err = document.getElementById('errorMsg');
+
+    if (!isValidUrl(url)) {
+      err.style.display = 'block';
+      return;
+    }
+
+    err.style.display = 'none';
+    targetUrl = url;
+    showAd();
+  }
+
+  function showAd() {
+    document.getElementById('adOverlay').classList.add('show');
+    startCountdown();
+  }
+
+  function startCountdown() {
+    let count = 5;
+    const numEl = document.getElementById('countNum');
+    const skipEl = document.getElementById('skipBtn');
+    const skipCount = document.getElementById('skipCount');
+    const ring = document.getElementById('ringFill');
+    const circumference = 2 * Math.PI * 18;
+
+    ring.style.strokeDashoffset = 0;
+
+    timer = setInterval(() => {
+      count--;
+      numEl.textContent = count;
+      skipCount.textContent = count;
+      ring.style.strokeDashoffset = circumference * (1 - count / 5);
+
+      if (count <= 0) {
+        clearInterval(timer);
+        skipEl.disabled = false;
+        skipEl.classList.add('ready');
+        skipEl.textContent = '🚀 Mulai Download →';
+        proceedDownload();
+      }
+    }, 1000);
+  }
+
+  async function proceedDownload() {
+    if (timer) clearInterval(timer);
+    document.getElementById('adOverlay').classList.remove('show');
+
+    if (currentMode === 'full') {
+      // Redirect ke savefrom untuk download full
+      window.open('https://savefrom.net/#url=' + encodeURIComponent(targetUrl), '_blank');
+      resetForm();
+      return;
+    }
+
+    // Mode cut - pakai backend VPS
+    const startRaw = document.getElementById('startTime').value.trim();
+    const endRaw = document.getElementById('endTime').value.trim();
+
+    if (!startRaw || !endRaw) {
+      alert('Isi Start Time dan End Time dulu!');
+      resetForm();
+      return;
+    }
+
+    const start = timeToSeconds(startRaw);
+    const end = timeToSeconds(endRaw);
+
+    // Tampilkan progress
+    document.getElementById('progressOverlay').classList.add('show');
+    document.getElementById('progressTitle').textContent = 'Memotong video...';
+    document.getElementById('progressSub').textContent = `Mengambil ${startRaw} - ${endRaw} dari video`;
+
+    try {
+      const response = await fetch(BACKEND + '/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: targetUrl, start, end })
+      });
+
+      if (!response.ok) throw new Error('Gagal download');
+
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = 'cutload_clip.mp4';
+      a.click();
+      URL.revokeObjectURL(downloadUrl);
+
+      document.getElementById('progressTitle').textContent = '✅ Download selesai!';
+      document.getElementById('progressSub').textContent = 'File sudah tersimpan di perangkat kamu';
+
+      setTimeout(() => {
+        document.getElementById('progressOverlay').classList.remove('show');
+        resetForm();
+      }, 2000);
+
+    } catch (err) {
+      document.getElementById('progressTitle').textContent = '❌ Gagal download';
+      document.getElementById('progressSub').textContent = 'Coba lagi atau gunakan mode Download Full';
+      setTimeout(() => {
+        document.getElementById('progressOverlay').classList.remove('show');
+        resetForm();
+      }, 3000);
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('urlInput').value = '';
+    document.getElementById('startTime').value = '';
+    document.getElementById('endTime').value = '';
+    document.getElementById('countNum').textContent = '5';
+    document.getElementById('skipCount').textContent = '5';
+    document.getElementById('skipBtn').disabled = true;
+    document.getElementById('skipBtn').classList.remove('ready');
+    document.getElementById('skipBtn').textContent = 'Menunggu... (5)';
+    document.getElementById('ringFill').style.strokeDashoffset = 0;
+  }
+
+  document.getElementById('urlInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') startProcess();
+  });
+</script>
+
+<script>
+var testAd = document.createElement('div');
+testAd.innerHTML = '&nbsp;';
+testAd.className = 'adsbox';
+document.body.appendChild(testAd);
+setTimeout(function() {
+  if (testAd.offsetHeight === 0) {
+    var notice = document.createElement('div');
+    notice.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:#f5e642;color:#000;padding:10px 20px;border-radius:10px;font-size:13px;z-index:9999;text-align:center;';
+    notice.innerHTML = '⚠️ Nonaktifkan AdBlocker untuk mendukung kami 🙏';
+    document.body.appendChild(notice);
+  }
+  document.body.removeChild(testAd);
+}, 100);
+</script><style>
+#adblock-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+#adblock-overlay.show { display: flex; }
+.adblock-card {
+  background: #111;
+  border: 1px solid #f5e642;
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+.adblock-title { font-size: 20px; font-weight: 700; color: #f5e642; margin-bottom: 12px; }
+.adblock-sub { font-size: 13px; color: #aaa; line-height: 1.6; margin-bottom: 24px; }
+.adblock-steps { text-align: left; background: #0a0a0a; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+.adblock-steps p { font-size: 12px; color: #ccc; margin-bottom: 8px; }
+.adblock-btn { width: 100%; padding: 14px; background: #f5e642; color: #000; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+  /* AdBlock Overlay */
+  #adblock-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  #adblock-overlay.show { display: flex; }
+  .adblock-card {
+    background: #111;
+    border: 1px solid #f5e642;
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+  .adblock-title { font-size: 20px; font-weight: 700; color: #f5e642; margin-bottom: 12px; }
+  .adblock-sub { font-size: 13px; color: #aaa; line-height: 1.6; margin-bottom: 24px; }
+  .adblock-steps { text-align: left; background: #0a0a0a; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+  .adblock-steps p { font-size: 12px; color: #ccc; margin-bottom: 8px; }
+  .adblock-btn { width: 100%; padding: 14px; background: #f5e642; color: #000; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+</style>
+<div id="adblock-overlay">
+  <div class="adblock-card">
+    <div class="adblock-title">⚠️ AdBlocker Terdeteksi!</div>
+    <div class="adblock-sub">CutLoad gratis berkat iklan.<br>Nonaktifkan AdBlocker dulu ya 🙏</div>
+    <div class="adblock-steps">
+      <p>📱 <strong style="color:#f5e642">Cara nonaktifkan AdGuard DNS:</strong></p>
+      <p>1. Buka Settings HP</p>
+      <p>2. Connections → More connection settings</p>
+      <p>3. Private DNS → pilih "Off"</p>
+      <p>4. Refresh halaman ini</p>
+    </div>
+    <button class="adblock-btn" onclick="location.reload()">✅ Sudah Nonaktifkan → Refresh</button>
+  </div>
+</div>
+<script>
+var testAd = document.createElement("div");
+testAd.innerHTML = "&nbsp;";
+testAd.className = "adsbox";
+testAd.style.cssText = "height:1px;width:1px;position:absolute;top:-100px";
+document.body.appendChild(testAd);
+setTimeout(function() {
+  if (testAd.offsetHeight === 0) {
+    document.getElementById("adblock-overlay").classList.add("show");
+  }
+  document.body.removeChild(testAd);
+}, 200);
+</script>
+<!-- ADBLOCK OVERLAY -->
+<div id="adblock-overlay">
+  <div class="adblock-card">
+    <div class="adblock-title">⚠️ AdBlocker Terdeteksi!</div>
+    <div class="adblock-sub">CutLoad gratis berkat iklan.<br>Nonaktifkan AdBlocker dulu ya 🙏</div>
+    <div class="adblock-steps">
+      <p>📱 <strong style="color:#f5e642">AdGuard DNS:</strong></p>
+      <p>1. Buka Settings HP</p>
+      <p>2. Connections → More connection settings</p>
+      <p>3. Private DNS → matikan / pilih "Off"</p>
+      <p>4. Refresh halaman ini</p>
+    </div>
+    <button class="adblock-btn" onclick="location.reload()">✅ Sudah Nonaktifkan → Refresh</button>
+  </div>
+</div>
+
+<script>
+var testAd = document.createElement("div");
+testAd.innerHTML = "&nbsp;";
+testAd.className = "adsbox";
+testAd.style.cssText = "height:1px;width:1px;position:absolute;top:-100px";
+document.body.appendChild(testAd);
+setTimeout(function() {
+  if (testAd.offsetHeight === 0) {
+    document.getElementById("adblock-overlay").classList.add("show");
+  }
+  document.body.removeChild(testAd);
+}, 200);
+</script>
+</body>
+</html>
+<script>
+var testAd = document.createElement("div");
+testAd.innerHTML = "&nbsp;";
+testAd.className = "adsbox";
+document.body.appendChild(testAd);
+setTimeout(function() {
+  if (testAd.offsetHeight === 0) {
+    var notice = document.createElement("div");
+    notice.style.cssText = "position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:#f5e642;color:#000;padding:10px 20px;border-radius:10px;font-size:13px;z-index:9999;text-align:center;";
+    notice.innerHTML = "⚠️ Nonaktifkan AdBlocker untuk mendukung kami 🙏";
+    document.body.appendChild(notice);
+  }
+  document.body.removeChild(testAd);
+}, 100);
+</script>
