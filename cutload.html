@@ -472,131 +472,130 @@
 </div>
 
 <!-- ADBLOCK BANNER -->
-<div id="adblock-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#111;border-top:1px solid #f5e642;padding:10px 16px;text-align:center;font-family:'DM Sans',sans-serif;">
-  <span style="color:#f5e642;font-size:13px;">🙏 Nonaktifkan AdBlocker untuk menjaga CutLoad tetap gratis 🙏</span>
-  <button onclick="this.parentElement.style.display='none'" style="margin-left:10px;background:#f5e642;color:#000;border:none;border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;">Tutup</button>
+<style>
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+#adblock-banner {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 9999;
+  background: linear-gradient(135deg, #1a1a1a 0%, #111 100%);
+  border-top: 2px solid #f5e642;
+  padding: 16px 20px;
+  text-align: center;
+  animation: slideUp 0.4s ease-out;
+  box-shadow: 0 -4px 30px rgba(245,230,66,0.08);
+}
+#adblock-banner.show { display: block; }
+#adblock-banner .ab-icon {
+  font-size: 22px;
+  display: block;
+  margin-bottom: 6px;
+}
+#adblock-banner .ab-text {
+  font-family: 'DM Sans', sans-serif;
+  color: #f0f0f0;
+  font-size: 14px;
+  line-height: 1.5;
+  display: block;
+  margin-bottom: 8px;
+}
+#adblock-banner .ab-text strong {
+  color: #f5e642;
+  font-weight: 600;
+}
+#adblock-banner .ab-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+#adblock-banner .ab-close:hover { color: #f5e642; }
+#adblock-banner .ab-btn {
+  display: inline-block;
+  background: #f5e642;
+  color: #0a0a0a;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 18px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+#adblock-banner .ab-btn:hover { opacity: 0.85; }
+</style>
+<div id="adblock-banner">
+  <button class="ab-close" onclick="closeAdblockBanner()" title="Tutup">&times;</button>
+  <span class="ab-icon">🛡️</span>
+  <span class="ab-text">
+    Nonaktifkan <strong>AdBlocker / AdGuard DNS</strong> untuk menjaga <strong>CutLoad</strong> tetap gratis 🙏
+  </span>
+  <button class="ab-btn" onclick="closeAdblockBanner()">Tutup</button>
 </div>
-
-
-<!-- AD OVERLAY -->
-<div class="ad-overlay" id="adOverlay">
-  <div class="ad-card">
-
-    <div class="ad-badge">⚡ Sebentar lagi...</div>
-
-    <div class="ad-message">
-      Iklan ini yang membuat<br><span>CutLoad tetap gratis</span> 🙏
-    </div>
-    <div class="ad-sub">
-      Terima kasih sudah mendukung kami.<br>
-      Download kamu akan dimulai dalam:
-    </div>
-
-    <!-- Ad placeholder (ganti dengan kode Adsterra) -->
-    <div class="ad-box">[ Slot Iklan — Adsterra ]</div>
-
-    <!-- Countdown ring -->
-    <div class="countdown-wrap">
-      <div class="ring-wrap">
-        <svg class="ring-svg" width="60" height="60" viewBox="0 0 40 40">
-          <circle class="ring-bg" cx="20" cy="20" r="18"/>
-          <circle class="ring-fill" id="ringFill" cx="20" cy="20" r="18"/>
-        </svg>
-        <div class="countdown-num" id="countNum">5</div>
-      </div>
-      <div class="countdown-label">detik sebelum<br>diarahkan ke<br>halaman download</div>
-    </div>
-
-    <button class="skip-btn" id="skipBtn" disabled onclick="doRedirect()">
-      Menunggu... (<span id="skipCount">5</span>)
-    </button>
-
-  </div>
-</div>
-
 <script>
-  const SUPPORTED = ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'facebook.com', 'fb.watch', 'twitter.com', 'x.com'];
-  const SAVEFROM = 'https://savefrom.net/#url=';
+function closeAdblockBanner() {
+  document.getElementById('adblock-banner').classList.remove('show');
+  sessionStorage.setItem('ab_closed', '1');
+}
 
-  let targetUrl = '';
-  let timer = null;
+(function() {
+  if (sessionStorage.getItem('ab_closed')) return;
 
-  function isValidUrl(url) {
-    try {
-      const u = new URL(url);
-      return SUPPORTED.some(d => u.hostname.includes(d));
-    } catch { return false; }
-  }
+  var detected = false;
 
-  function startProcess() {
-    const input = document.getElementById('urlInput').value.trim();
-    const err = document.getElementById('errorMsg');
+  // === Method 1: Bait div (buat extension AdBlock) ===
+  (function() {
+    var a = document.createElement('div');
+    a.innerHTML = '&nbsp;';
+    a.className = 'adsbox';
+    a.style.cssText = 'height:1px;width:1px;position:absolute;top:-100px;left:0';
+    document.body.appendChild(a);
+    setTimeout(function() {
+      if (a.offsetHeight === 0) detected = true;
+      document.body.removeChild(a);
+      if (detected) showBanner();
+    }, 200);
+  })();
 
-    if (!isValidUrl(input)) {
-      err.style.display = 'block';
-      return;
-    }
-
-    err.style.display = 'none';
-    targetUrl = input;
-    showAd();
-  }
-
-  function showAd() {
-    document.getElementById('adOverlay').classList.add('show');
-    startCountdown();
-  }
-
-  function startCountdown() {
-    let count = 5;
-    const numEl = document.getElementById('countNum');
-    const skipEl = document.getElementById('skipBtn');
-    const skipCount = document.getElementById('skipCount');
-    const ring = document.getElementById('ringFill');
-    const circumference = 2 * Math.PI * 18; // ~113
-
-    ring.style.strokeDashoffset = 0;
-
-    timer = setInterval(() => {
-      count--;
-      numEl.textContent = count;
-      skipCount.textContent = count;
-
-      // Ring progress
-      const offset = circumference * (1 - count / 5);
-      ring.style.strokeDashoffset = offset;
-
-      if (count <= 0) {
-        clearInterval(timer);
-        skipEl.disabled = false;
-        skipEl.classList.add('ready');
-        skipEl.textContent = '🚀 Lanjut ke Download →';
-        doRedirect();
+  // === Method 2: DNS check (buat AdGuard DNS / Pi-hole) ===
+  (function() {
+    var img = new Image();
+    img.onload = function() { /* ad domain reachable - no DNS block */ };
+    img.onerror = function() {
+      // Gagal load = DNS blocking aktif
+      detected = true;
+      showBanner();
+    };
+    // Coba load pixel dari domain iklan
+    img.src = 'https://pl29557001.effectivecpmnetwork.com/favicon.ico?' + Date.now();
+    // Timeout 3 detik
+    setTimeout(function() {
+      if (!img.complete) {
+        img.src = '';
+        detected = true;
+        showBanner();
       }
-    }, 1000);
-  }
+    }, 3000);
+  })();
 
-  function doRedirect() {
-    if (timer) clearInterval(timer);
-    window.open(SAVEFROM + encodeURIComponent(targetUrl), '_blank');
-    
-    // Reset
-    setTimeout(() => {
-      document.getElementById('adOverlay').classList.remove('show');
-      document.getElementById('urlInput').value = '';
-      document.getElementById('countNum').textContent = '5';
-      document.getElementById('skipCount').textContent = '5';
-      document.getElementById('skipBtn').disabled = true;
-      document.getElementById('skipBtn').classList.remove('ready');
-      document.getElementById('skipBtn').textContent = 'Menunggu... (5)';
-      document.getElementById('ringFill').style.strokeDashoffset = 0;
-    }, 500);
+  function showBanner() {
+    if (detected) {
+      document.getElementById('adblock-banner').classList.add('show');
+    }
   }
-
-  // Enter key support
-  document.getElementById('urlInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') startProcess();
-  });
+})();
 </script>
 
 <script>

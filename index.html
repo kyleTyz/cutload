@@ -839,31 +839,61 @@
   <button class="ab-close" onclick="closeAdblockBanner()" title="Tutup">&times;</button>
   <span class="ab-icon">🛡️</span>
   <span class="ab-text">
-    Nonaktifkan <strong>AdBlocker</strong> untuk menjaga <strong>CutLoad</strong> tetap gratis 🙏
+    Nonaktifkan <strong>AdBlocker / AdGuard DNS</strong> untuk menjaga <strong>CutLoad</strong> tetap gratis 🙏
   </span>
   <button class="ab-btn" onclick="closeAdblockBanner()">Tutup</button>
 </div>
 <script>
 function closeAdblockBanner() {
   document.getElementById('adblock-banner').classList.remove('show');
-  // Sembunyikan permanen selama session
   sessionStorage.setItem('ab_closed', '1');
 }
+
 (function() {
-  // Cek apakah udah ditutup di session ini
   if (sessionStorage.getItem('ab_closed')) return;
 
-  var a = document.createElement('div');
-  a.innerHTML = '&nbsp;';
-  a.className = 'adsbox';
-  a.style.cssText = 'height:1px;width:1px;position:absolute;top:-100px;left:0';
-  document.body.appendChild(a);
-  setTimeout(function() {
-    if (a.offsetHeight === 0) {
+  var detected = false;
+
+  // === Method 1: Bait div (buat extension AdBlock) ===
+  (function() {
+    var a = document.createElement('div');
+    a.innerHTML = '&nbsp;';
+    a.className = 'adsbox';
+    a.style.cssText = 'height:1px;width:1px;position:absolute;top:-100px;left:0';
+    document.body.appendChild(a);
+    setTimeout(function() {
+      if (a.offsetHeight === 0) detected = true;
+      document.body.removeChild(a);
+      if (detected) showBanner();
+    }, 200);
+  })();
+
+  // === Method 2: DNS check (buat AdGuard DNS / Pi-hole) ===
+  (function() {
+    var img = new Image();
+    img.onload = function() { /* ad domain reachable - no DNS block */ };
+    img.onerror = function() {
+      // Gagal load = DNS blocking aktif
+      detected = true;
+      showBanner();
+    };
+    // Coba load pixel dari domain iklan
+    img.src = 'https://pl29557001.effectivecpmnetwork.com/favicon.ico?' + Date.now();
+    // Timeout 3 detik
+    setTimeout(function() {
+      if (!img.complete) {
+        img.src = '';
+        detected = true;
+        showBanner();
+      }
+    }, 3000);
+  })();
+
+  function showBanner() {
+    if (detected) {
       document.getElementById('adblock-banner').classList.add('show');
     }
-    document.body.removeChild(a);
-  }, 300);
+  }
 })();
 </script>
 
